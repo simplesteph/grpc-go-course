@@ -8,6 +8,8 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/mongodb/mongo-go-driver/bson"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -65,6 +67,40 @@ func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*
 		},
 	}, nil
 
+}
+
+func (*server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blogpb.ReadBlogResponse, error) {
+	fmt.Println("Read blog request")
+
+	blogID := req.GetBlogId()
+	oid, err := objectid.FromHex(blogID)
+	if err != nil {
+		return nil, status.Errorf(
+			codes.InvalidArgument,
+			fmt.Sprintf("Cannot parse ID"),
+		)
+	}
+
+	// create an empty struct
+	data := &blogItem{}
+	filter := bson.NewDocument(bson.EC.ObjectID("_id", oid))
+
+	res := collection.FindOne(context.Background(), filter)
+	if err := res.Decode(data); err != nil {
+		return nil, status.Errorf(
+			codes.NotFound,
+			fmt.Sprintf("Cannot find blog with specified ID: %v", err),
+		)
+	}
+
+	return &blogpb.ReadBlogResponse{
+		Blog: &blogpb.Blog{
+			Id:       data.ID.Hex(),
+			AuthorId: data.AuthorID,
+			Content:  data.Content,
+			Title:    data.Title,
+		},
+	}, nil
 }
 
 func main() {
