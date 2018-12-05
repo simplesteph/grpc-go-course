@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 
-	"github.com/mongodb/mongo-go-driver/bson/objectid"
+	"github.com/mongodb/mongo-go-driver/bson/primitive"
 
 	"github.com/mongodb/mongo-go-driver/mongo"
 
@@ -28,10 +28,10 @@ type server struct {
 }
 
 type blogItem struct {
-	ID       objectid.ObjectID `bson:"_id,omitempty"`
-	AuthorID string            `bson:"author_id"`
-	Content  string            `bson:"content"`
-	Title    string            `bson:"title"`
+	ID       primitive.ObjectID `bson:"_id,omitempty"`
+	AuthorID string             `bson:"author_id"`
+	Content  string             `bson:"content"`
+	Title    string             `bson:"title"`
 }
 
 func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*blogpb.CreateBlogResponse, error) {
@@ -51,7 +51,7 @@ func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*
 			fmt.Sprintf("Internal error: %v", err),
 		)
 	}
-	oid, ok := res.InsertedID.(objectid.ObjectID)
+	oid, ok := res.InsertedID.(primitive.ObjectID)
 	if !ok {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -74,7 +74,7 @@ func (*server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blog
 	fmt.Println("Read blog request")
 
 	blogID := req.GetBlogId()
-	oid, err := objectid.FromHex(blogID)
+	oid, err := primitive.ObjectIDFromHex(blogID)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
@@ -84,7 +84,7 @@ func (*server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blog
 
 	// create an empty struct
 	data := &blogItem{}
-	filter := bson.NewDocument(bson.EC.ObjectID("_id", oid))
+	filter := bson.M{"_id": oid}
 
 	res := collection.FindOne(context.Background(), filter)
 	if err := res.Decode(data); err != nil {
@@ -111,7 +111,7 @@ func dataToBlogPb(data *blogItem) *blogpb.Blog {
 func (*server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*blogpb.UpdateBlogResponse, error) {
 	fmt.Println("Update blog request")
 	blog := req.GetBlog()
-	oid, err := objectid.FromHex(blog.GetId())
+	oid, err := primitive.ObjectIDFromHex(blog.GetId())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
@@ -121,7 +121,7 @@ func (*server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*
 
 	// create an empty struct
 	data := &blogItem{}
-	filter := bson.NewDocument(bson.EC.ObjectID("_id", oid))
+	filter := bson.M{"_id": oid}
 
 	res := collection.FindOne(context.Background(), filter)
 	if err := res.Decode(data); err != nil {
@@ -152,7 +152,7 @@ func (*server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*
 
 func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*blogpb.DeleteBlogResponse, error) {
 	fmt.Println("Delete blog request")
-	oid, err := objectid.FromHex(req.GetBlogId())
+	oid, err := primitive.ObjectIDFromHex(req.GetBlogId())
 	if err != nil {
 		return nil, status.Errorf(
 			codes.InvalidArgument,
@@ -160,7 +160,7 @@ func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*
 		)
 	}
 
-	filter := bson.NewDocument(bson.EC.ObjectID("_id", oid))
+	filter := bson.M{"_id": oid}
 
 	res, err := collection.DeleteOne(context.Background(), filter)
 
