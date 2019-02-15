@@ -83,8 +83,8 @@ func (*server) GreetEveryone(stream greetpb.GreetService_GreetEveryoneServer) er
 			Result: result,
 		})
 		if sendErr != nil {
-			log.Fatalf("Error while sending data to client: %v", err)
-			return err
+			log.Fatalf("Error while sending data to client: %v", sendErr)
+			return sendErr
 		}
 	}
 
