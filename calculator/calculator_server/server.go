@@ -93,8 +93,8 @@ func (*server) FindMaximum(stream calculatorpb.CalculatorService_FindMaximumServ
 				Maximum: maximum,
 			})
 			if sendErr != nil {
-				log.Fatalf("Error while sending data to client: %v", err)
-				return err
+				log.Fatalf("Error while sending data to client: %v", sendErr)
+				return sendErr
 			}
 		}
 	}

@@ -121,7 +121,7 @@ func doBiDiStreaming(c calculatorpb.CalculatorServiceClient) {
 		}
 		stream.CloseSend()
 	}()
-	// receive go routing
+	// receive go routine
 	go func() {
 		for {
 			res, err := stream.Recv()
