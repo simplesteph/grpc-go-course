@@ -184,7 +184,7 @@ func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*
 func (*server) ListBlog(req *blogpb.ListBlogRequest, stream blogpb.BlogService_ListBlogServer) error {
 	fmt.Println("List blog request")
 
-	cur, err := collection.Find(context.Background(), bson.D{‌{}})
+	cur, err := collection.Find(context.Background(), bson.D{{}})
 	if err != nil {
 		return status.Errorf(
 			codes.Internal,
@@ -219,7 +219,7 @@ func main() {
 
 	fmt.Println("Connecting to MongoDB")
 	// connect to MongoDB
-	client, err := mongo.NewClient("mongodb://localhost:27017")
+	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
 		log.Fatal(err)
 	}
