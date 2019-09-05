@@ -8,15 +8,15 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/mongodb/mongo-go-driver/bson"
+	"gopkg.in/mgo.v2/bson"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/reflection"
 	"google.golang.org/grpc/status"
 
-	"github.com/mongodb/mongo-go-driver/bson/primitive"
-
-	"github.com/mongodb/mongo-go-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/simplesteph/grpc-go-course/blog/blogpb"
 	"google.golang.org/grpc"
@@ -184,7 +184,7 @@ func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*
 func (*server) ListBlog(req *blogpb.ListBlogRequest, stream blogpb.BlogService_ListBlogServer) error {
 	fmt.Println("List blog request")
 
-	cur, err := collection.Find(context.Background(), bson.D{{}})
+	cur, err := collection.Find(context.Background(), primitive.D{{}})
 	if err != nil {
 		return status.Errorf(
 			codes.Internal,
