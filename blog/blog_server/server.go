@@ -255,7 +255,6 @@ func main() {
 
 	// Block until a signal is received
 	<-ch
-	<-ch
 	// First we close the connection with MongoDB:
 	fmt.Println("Closing MongoDB Connection")
     client.Disconnect(context.TODO())	
@@ -265,10 +264,10 @@ func main() {
     // Second step : closing the listener
     fmt.Println("Closing the listener")
     if err := lis.Close(); err != nil {
-         log.Fatalf("Error on closing the listener : %v", err)
-     }
-     // Finally, we stop the server
-     fmt.Println("Stopping the server")
-     s.Stop()
-     fmt.Println("End of Program")
+        log.Fatalf("Error on closing the listener : %v", err)
+	}
+	// Finally, we stop the server
+	fmt.Println("Stopping the server")
+    s.Stop()
+    fmt.Println("End of Program")
 }
