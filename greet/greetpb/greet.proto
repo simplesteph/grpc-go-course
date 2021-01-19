@@ -4,5 +4,30 @@ package greet;
 
 option go_package="greet/greetpb";
 
-service GreetService{}
+message Greeting {
+    string first_name = 1;
+    string last_name = 2;
+}
+
+message GreetRequest {
+    Greeting greeting = 1;
+}
+
+message GreetResponse {
+    string result = 1;
+}
+
+message GreetManyTimesRequest {
+    Greeting greeting = 1;
+}
+
+message GreetManyTimesResponse {
+    string result = 1;
+}
+
+service GreetService{
+    rpc Greet(GreetRequest) returns (GreetResponse) {};
+
+    rpc GreetManyTimes(GreetManyTimesRequest) returns (stream GreetManyTimesResponse) {};
+}
 
