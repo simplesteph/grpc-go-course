@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"os"
 	"strconv"
 
 	"github.com/leonardo-tozato/grpc-go-course/calculator/calculatorpb"
@@ -14,8 +13,6 @@ import (
 )
 
 func main() {
-	args := os.Args[1:]
-
 	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("could not connect %v", err)
@@ -23,7 +20,50 @@ func main() {
 	defer conn.Close()
 
 	c := calculatorpb.NewCalculatorServiceClient(conn)
-	doAverageStreaming(c, args)
+	doMaxNumberStreaming(c)
+}
+
+func doMaxNumberStreaming(c calculatorpb.CalculatorServiceClient) {
+	stream, err := c.StreamMaxNumber(context.Background())
+	if err != nil {
+		log.Fatalf("error while creating stream: %v", err)
+		return
+	}
+
+	waitc := make(chan struct{})
+
+	go func() {
+		fmt.Print("Enter numbers: ")
+		for {
+			var num int32
+			_, err := fmt.Scan(&num)
+			if err != nil {
+				close(waitc)
+			}
+			if err := stream.Send(&calculatorpb.StreamMaxNumberRequest{
+				Num: num,
+			}); err != nil {
+				log.Fatalf("failed to send number to server: %v", err)
+			}
+		}
+	}()
+
+	go func () {
+		for {
+			res, err := stream.Recv()
+			if err == io.EOF {
+				break
+			}
+			if err != nil {
+				log.Fatalf("error while receiving response: %v", err)
+			}
+			log.Printf("received message: %v", res.GetMaxNum())
+		}
+		close(waitc)
+	}()
+
+	<-waitc
+
 }
 
 func doAverageStreaming(c calculatorpb.CalculatorServiceClient, nums []string) {

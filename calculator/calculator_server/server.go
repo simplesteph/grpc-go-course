@@ -13,6 +13,28 @@ import (
 
 type server struct{}
 
+func (*server) StreamMaxNumber(stream calculatorpb.CalculatorService_StreamMaxNumberServer) error {
+	var numbers_received []int32
+	for {
+		req, err := stream.Recv()
+		if err == io.EOF {
+			return nil
+		}
+		if err != nil {
+			log.Fatalf("error while reading client stream: %v", err)
+			return err
+		}
+		numbers_received = append(numbers_received, req.GetNum())
+		result := calcMax(numbers_received)
+		if err := stream.Send(&calculatorpb.StreamMaxNumberResponse{
+			MaxNum: result,
+		}); err != nil {
+			log.Fatalf("error while sendind response to the client: %v", err)
+			return err
+		}
+	}
+}
+
 func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculatorpb.SumResponse, error) {
 	firstNumber := req.GetSum().GetFirstNumber()
 	secondNumber := req.GetSum().GetSecondNumber()
@@ -73,6 +95,16 @@ func calcAverage(nums []int32) float64 {
 	return float64(sum) / float64(len(nums))
 }
 
+func calcMax(nums []int32) int32 {
+	max := nums[0]
+	for _, val := range nums {
+		if max < val {
+			max = val
+		}
+	}
+
+	return max
+}
 func main() {
 	lis, err := net.Listen("tcp", "0.0.0.0:50051")
 	if err != nil {

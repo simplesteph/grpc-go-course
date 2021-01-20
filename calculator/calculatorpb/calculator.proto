@@ -33,11 +33,21 @@ message ComputeAverageResponse {
     double average = 1;
 }
 
+message StreamMaxNumberRequest {
+    int32 num = 1;
+}
+
+message StreamMaxNumberResponse {
+    int32 max_num = 1;
+}
+
 service CalculatorService {
     rpc Sum(SumRequest) returns (SumResponse) {};
     
     rpc PrimeDecomposition(PrimeDecompositionRequest) returns (stream PrimeDecompositionResponse) {};
 
     rpc ComputeAverage(stream ComputeAverageRequest) returns (ComputeAverageResponse) {};
+
+    rpc StreamMaxNumber(stream StreamMaxNumberRequest) returns (stream StreamMaxNumberResponse) {};
 }
 
