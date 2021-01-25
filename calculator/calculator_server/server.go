@@ -3,8 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/reflection"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
+	"math"
 	"net"
 
 	"github.com/leonardo-tozato/grpc-go-course/calculator/calculatorpb"
@@ -12,6 +16,17 @@ import (
 )
 
 type server struct{}
+
+func (*server) SquareRoot(ctx context.Context, req *calculatorpb.SquareRootRequest) (*calculatorpb.SquareRootResponse, error) {
+	number := req.GetNumber()
+	if number < 0 {
+		return nil, status.Errorf(codes.InvalidArgument, fmt.Sprintf("Received a negative number: %v", number))
+	}
+
+	return &calculatorpb.SquareRootResponse{
+		NumberRoot: math.Sqrt(float64(number)),
+	}, nil
+}
 
 func (*server) StreamMaxNumber(stream calculatorpb.CalculatorService_StreamMaxNumberServer) error {
 	var numbers_received []int32
@@ -113,6 +128,8 @@ func main() {
 
 	s := grpc.NewServer()
 	calculatorpb.RegisterCalculatorServiceServer(s, &server{})
+
+	reflection.Register(s)
 
 	fmt.Print("server listening on port 50051")
 

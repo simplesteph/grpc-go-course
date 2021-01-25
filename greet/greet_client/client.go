@@ -3,25 +3,62 @@ package main
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/credentials"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
+	"time"
 
 	"github.com/leonardo-tozato/grpc-go-course/greet/greetpb"
 	"google.golang.org/grpc"
 )
 
 func main() {
-	conn, err := grpc.Dial("localhost:50051", grpc.WithInsecure())
+	certFile := "ssl/ca.crt"
+	creds, err := credentials.NewClientTLSFromFile(certFile, "")
+
+	if err != nil {
+		log.Fatalf("error while loading CA trust certificates: %v", err)
+	}
+
+	conn, err := grpc.Dial("localhost:50051", grpc.WithTransportCredentials(creds))
 	if err != nil {
 		log.Fatalf("could not connect %v", err)
 	}
 	defer conn.Close()
 
 	c := greetpb.NewGreetServiceClient(conn)
-	// doUnary(c)
+	doUnary(c)
 	// doServerStreaming(c)
 	//doClientStreaming(c)
-	doBidiStreaming(c)
+	//doBidiStreaming(c)
+	//doUnaryWithDeadLine(c)
+}
+
+func doUnaryWithDeadLine(c greetpb.GreetServiceClient) {
+	req := &greetpb.GreetWithDeadlineRequest{
+		Greeting: &greetpb.Greeting{
+			FirstName: "Bruce",
+			LastName:  "Batma",
+		},
+	}
+	ctx, cancel := context.WithTimeout(context.Background(), 1 * time.Second)
+	defer cancel()
+
+	res, err := c.GreetWithDeadline(ctx, req)
+	if err != nil {
+
+		statusErr, ok := status.FromError(err)
+		if ok && statusErr.Code() == codes.DeadlineExceeded {
+			fmt.Println("Timeout!")
+			return
+		} else {
+			log.Fatalf("error while calling Greet RPC: %v", err)
+		}
+	}
+
+	log.Printf("response from Greet: %v", res.Result)
 }
 
 func doBidiStreaming(c greetpb.GreetServiceClient) {

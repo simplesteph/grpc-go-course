@@ -1,0 +1,14 @@
+[ req ]
+default_bits = 4096
+distinguished_name = dn
+req_extensions = req_ext
+prompt = no
+
+[ dn ]
+CN = localhost
+
+[ req_ext ]
+subjectAltName = @alt_names
+
+[alt_names]
+DNS.1 = localhost

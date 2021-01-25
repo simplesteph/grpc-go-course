@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"google.golang.org/grpc/status"
 	"io"
 	"log"
 	"strconv"
@@ -20,7 +21,26 @@ func main() {
 	defer conn.Close()
 
 	c := calculatorpb.NewCalculatorServiceClient(conn)
-	doMaxNumberStreaming(c)
+	doErrorUnary(c)
+}
+
+func doErrorUnary(c calculatorpb.CalculatorServiceClient) {
+	// correct call
+	res, err := c.SquareRoot(context.Background(), &calculatorpb.SquareRootRequest{Number: int32(-10)})
+
+	if err != nil {
+		respErr, ok := status.FromError(err)
+		if ok {
+			log.Println(respErr.Message())
+			log.Println(respErr.Code())
+			fmt.Println("Negative number sent to the server")
+			return
+		} else {
+			log.Fatalf("big error calling sqrt: %v", err)
+		}
+	}
+
+	log.Printf("square root of number: %v", res.GetNumberRoot())
 }
 
 func doMaxNumberStreaming(c calculatorpb.CalculatorServiceClient) {

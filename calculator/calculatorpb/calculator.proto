@@ -41,6 +41,14 @@ message StreamMaxNumberResponse {
     int32 max_num = 1;
 }
 
+message SquareRootRequest {
+    int32 number = 1;
+}
+
+message SquareRootResponse {
+    double number_root = 1;
+}
+
 service CalculatorService {
     rpc Sum(SumRequest) returns (SumResponse) {};
     
@@ -48,6 +56,11 @@ service CalculatorService {
 
     rpc ComputeAverage(stream ComputeAverageRequest) returns (ComputeAverageResponse) {};
 
-    rpc StreamMaxNumber(stream StreamMaxNumberRequest) returns (stream StreamMaxNumberResponse) {};
+    rpc StreamMaxNumber(stream StreamMaxNumberRequest) returns (stream StreamMaxNumberResponse) {}
+    
+    // error handling
+    // this RPC will throw an exception if the sent number is negative
+    // the error beign sent is of type INVALID_ARGUMENT
+    rpc SquareRoot(SquareRootRequest) returns (SquareRootResponse) {};
 }
 
