@@ -261,11 +261,6 @@ func main() {
 	if err := client.Disconnect(context.TODO()); err != nil {
         	log.Fatalf("Error on disconnection with MongoDB : %v", err)
     	}
-    	// Second step : closing the listener
-    	fmt.Println("Closing the listener")
-    	if err := lis.Close(); err != nil {
-        	log.Fatalf("Error on closing the listener : %v", err)
-	}
 	// Finally, we stop the server
 	fmt.Println("Stopping the server")
     	s.Stop()
