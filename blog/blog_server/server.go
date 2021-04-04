@@ -25,6 +25,7 @@ import (
 var collection *mongo.Collection
 
 type server struct {
+	blogpb.BlogServiceServer
 }
 
 type blogItem struct {
@@ -44,7 +45,7 @@ func (*server) CreateBlog(ctx context.Context, req *blogpb.CreateBlogRequest) (*
 		Content:  blog.GetContent(),
 	}
 
-	res, err := collection.InsertOne(context.Background(), data)
+	res, err := collection.InsertOne(ctx, data)
 	if err != nil {
 		return nil, status.Errorf(
 			codes.Internal,
@@ -86,7 +87,7 @@ func (*server) ReadBlog(ctx context.Context, req *blogpb.ReadBlogRequest) (*blog
 	data := &blogItem{}
 	filter := bson.M{"_id": oid}
 
-	res := collection.FindOne(context.Background(), filter)
+	res := collection.FindOne(ctx, filter)
 	if err := res.Decode(data); err != nil {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -123,7 +124,7 @@ func (*server) UpdateBlog(ctx context.Context, req *blogpb.UpdateBlogRequest) (*
 	data := &blogItem{}
 	filter := bson.M{"_id": oid}
 
-	res := collection.FindOne(context.Background(), filter)
+	res := collection.FindOne(ctx, filter)
 	if err := res.Decode(data); err != nil {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -162,7 +163,7 @@ func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*
 
 	filter := bson.M{"_id": oid}
 
-	res, err := collection.DeleteOne(context.Background(), filter)
+	res, err := collection.DeleteOne(ctx, filter)
 
 	if err != nil {
 		return nil, status.Errorf(
@@ -181,7 +182,7 @@ func (*server) DeleteBlog(ctx context.Context, req *blogpb.DeleteBlogRequest) (*
 	return &blogpb.DeleteBlogResponse{BlogId: req.GetBlogId()}, nil
 }
 
-func (*server) ListBlog(req *blogpb.ListBlogRequest, stream blogpb.BlogService_ListBlogServer) error {
+func (*server) ListBlog(_ *blogpb.ListBlogRequest, stream blogpb.BlogService_ListBlogServer) error {
 	fmt.Println("List blog request")
 
 	cur, err := collection.Find(context.Background(), primitive.D{{}})
@@ -191,7 +192,7 @@ func (*server) ListBlog(req *blogpb.ListBlogRequest, stream blogpb.BlogService_L
 			fmt.Sprintf("Unknown internal error: %v", err),
 		)
 	}
-	defer cur.Close(context.Background())
+	defer cur.Close(context.Background()) // Should handle err
 	for cur.Next(context.Background()) {
 		data := &blogItem{}
 		err := cur.Decode(data)
@@ -202,7 +203,7 @@ func (*server) ListBlog(req *blogpb.ListBlogRequest, stream blogpb.BlogService_L
 			)
 
 		}
-		stream.Send(&blogpb.ListBlogResponse{Blog: dataToBlogPb(data)})
+		stream.Send(&blogpb.ListBlogResponse{Blog: dataToBlogPb(data)}) // Should handle err
 	}
 	if err := cur.Err(); err != nil {
 		return status.Errorf(
@@ -236,7 +237,7 @@ func main() {
 		log.Fatalf("Failed to listen: %v", err)
 	}
 
-	opts := []grpc.ServerOption{}
+	var opts []grpc.ServerOption
 	s := grpc.NewServer(opts...)
 	blogpb.RegisterBlogServiceServer(s, &server{})
 	// Register reflection service on gRPC server.
@@ -257,17 +258,12 @@ func main() {
 	<-ch
 	// First we close the connection with MongoDB:
 	fmt.Println("Closing MongoDB Connection")
-    	// client.Disconnect(context.TODO())	
 	if err := client.Disconnect(context.TODO()); err != nil {
-        	log.Fatalf("Error on disconnection with MongoDB : %v", err)
-    	}
-    	// Second step : closing the listener
-    	fmt.Println("Closing the listener")
-    	if err := lis.Close(); err != nil {
-        	log.Fatalf("Error on closing the listener : %v", err)
+		log.Fatalf("Error on disconnection with MongoDB : %v", err)
 	}
+
 	// Finally, we stop the server
 	fmt.Println("Stopping the server")
-    	s.Stop()
-    	fmt.Println("End of Program")
+	s.Stop()
+	fmt.Println("End of Program")
 }
