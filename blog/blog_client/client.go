@@ -20,7 +20,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("could not connect: %v", err)
 	}
-	defer cc.Close()
+	defer cc.Close() // Maybe this should be in a separate function and the error handled?
 
 	c := blogpb.NewBlogServiceClient(cc)
 
