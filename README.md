@@ -2,7 +2,7 @@
 
 This is a companion repository for my [GRPC Golang course](http://bit.ly/grpc-golang-github)
 
-[![course logo](https://udemy-images.udemy.com/course/480x270/1685664_10e0_4.jpg)](http://bit.ly/grpc-golang-github)
+[![course logo](https://img-c.udemycdn.com/course/480x270/1792960_19b1_6.jpg)](http://bit.ly/grpc-golang-github)
 
 # Content
 
