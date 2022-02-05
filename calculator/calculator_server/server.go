@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net"
+	"time"
 
 	"../calculatorpb"
 	"google.golang.org/grpc/credentials"
@@ -22,6 +23,33 @@ func (*server) Sum(ctx context.Context, req *calculatorpb.SumRequest) (*calculat
 		SumResult: result,
 	}
 	return res, nil
+}
+
+func (*server) PND(req *calculatorpb.PNDRequest, stream calculatorpb.CalculatorService_PNDServer) error {
+
+	k := req.GetNumber()
+
+	n := int32(2)
+
+	for {
+		if k <= 1 {
+			break
+		}
+		for {
+			if k%n == 0 {
+				k = k / n
+				res := &calculatorpb.PNDResponse{
+					Prime: n,
+				}
+				stream.Send(res)
+				time.Sleep(time.Second)
+			} else {
+				n++
+				break
+			}
+		}
+	}
+	return nil
 }
 
 func main() {
